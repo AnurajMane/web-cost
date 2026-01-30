@@ -8,10 +8,10 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { LogOut, User } from 'lucide-react';
 
-export function Header() {
+function Header() {
   const { user, logout } = useAuth();
 
   return (
@@ -24,7 +24,8 @@ export function Header() {
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="relative h-10 w-10 rounded-full">
               <Avatar>
-                <AvatarFallback className="bg-gradient-primary text-primary-foreground">
+                <AvatarImage src={user?.avatar} />
+                <AvatarFallback className="bg-primary/10 text-primary">
                   {user?.username?.[0]?.toUpperCase() || 'U'}
                 </AvatarFallback>
               </Avatar>
@@ -52,3 +53,4 @@ export function Header() {
     </header>
   );
 }
+export default Header;

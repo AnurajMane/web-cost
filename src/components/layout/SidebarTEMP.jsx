@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom';
-import { CloudCog, LayoutDashboard, Cloud, TrendingDown, MessageSquare, Settings, AlertCircle } from 'lucide-react';
+import { LayoutDashboard, Cloud, MessageSquare, Settings, AlertCircle, CloudLightning } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const navigation = [
@@ -10,16 +10,16 @@ const navigation = [
   { name: 'Settings', href: '/settings', icon: Settings },
 ];
 
-export function Sidebar() {
+export default function Sidebar() {
   return (
     <div className="hidden md:flex md:flex-shrink-0">
-      <div className="flex flex-col w-64 bg-card border-r border-border">
+      <div className="flex flex-col w-64 bg-card border-r border-border h-screen">
         <div className="flex items-center h-16 px-6 border-b border-border">
           <div className="flex items-center gap-3">
-            <div className="bg-gradient-primary p-2 rounded-lg">
-              <CloudCog className="h-6 w-6 text-primary-foreground" />
+            <div className="bg-primary/10 p-2 rounded-lg">
+              <CloudLightning className="h-6 w-6 text-primary" />
             </div>
-            <span className="text-lg font-bold gradient-text">AWS Optimizer</span>
+            <span className="text-lg font-bold">AWS Optimizer</span>
           </div>
         </div>
         <nav className="flex-1 px-4 py-6 space-y-1 overflow-y-auto">
@@ -32,7 +32,7 @@ export function Sidebar() {
                   'flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-lg transition-colors',
                   isActive
                     ? 'bg-primary text-primary-foreground'
-                    : 'text-muted-foreground hover:bg-secondary hover:text-foreground'
+                    : 'text-muted-foreground hover:bg-muted hover:text-foreground'
                 )
               }
             >
