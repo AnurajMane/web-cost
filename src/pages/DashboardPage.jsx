@@ -1,22 +1,25 @@
-import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { 
+  LayoutDashboard, 
+  TrendingUp, 
+  DollarSign, 
+  Cloud,
+  ArrowUpRight,
+  ArrowDownRight 
+} from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { DollarSign, TrendingUp, Cloud, RefreshCw } from 'lucide-react';
-import { api } from '@/lib/api';
-
-// Assuming you have these components in src/components/dashboard/
 import { CostChart } from '@/components/dashboard/CostChart';
 import { ServiceBreakdown } from '@/components/dashboard/ServiceBreakdown';
 import { MonthlyBilling } from '@/components/dashboard/MonthlyBilling';
+import { api } from '@/lib/api';
 
-export function DashboardPage() {
-  const navigate = useNavigate();
+export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [summary, setSummary] = useState({
     totalCost: 0,
     forecastedCost: 0,
+    previousMonthComparison: 0,
     activeAccounts: 0
   });
 
@@ -27,84 +30,99 @@ export function DashboardPage() {
   const loadDashboardData = async () => {
     try {
       setLoading(true);
-      // Calls your C# Controller
-      const data = await api.get('/costs/summary');
-      setSummary(data);
+      // Fetches from your new backend architecture
+      const [costSummary, accounts] = await Promise.all([
+        api.get('/costs/summary'),
+        api.get('/accounts')
+      ]);
+
+      setSummary({
+        totalCost: costSummary?.total_mtd || 0,
+        forecastedCost: costSummary?.forecasted || 0,
+        previousMonthComparison: costSummary?.change_percent || 0,
+        activeAccounts: accounts?.length || 0
+      });
     } catch (error) {
-      console.error('Failed to load dashboard:', error);
+      console.error("Error loading dashboard metrics:", error);
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="space-y-6 animate-fade-in">
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-        <div>
-          <h2 className="text-3xl font-bold tracking-tight">Dashboard</h2>
-          <p className="text-muted-foreground">Overview of your cloud infrastructure costs</p>
-        </div>
-        <div className="flex items-center gap-2">
-          <Button variant="outline" onClick={loadDashboardData} disabled={loading}>
-            <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
-            Refresh Data
-          </Button>
-          <Button onClick={() => navigate('/accounts')}>
-            <Cloud className="h-4 w-4 mr-2" />
-            Manage Accounts
-          </Button>
-        </div>
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <h2 className="text-3xl font-bold tracking-tight">Dashboard Overview</h2>
       </div>
 
-      {/* KPI Cards */}
-      <div className="grid gap-4 md:grid-cols-3">
+      {/* KPI Metric Cards */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Cost (MTD)</CardTitle>
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">${summary.totalCost?.toFixed(2) || '0.00'}</div>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Forecasted Cost</CardTitle>
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">${summary.forecastedCost?.toFixed(2) || '0.00'}</div>
+            <div className="text-2xl font-bold">${summary.totalCost.toLocaleString()}</div>
+            <p className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
+              {summary.previousMonthComparison >= 0 ? (
+                <span className="text-destructive flex items-center">
+                  <ArrowUpRight className="h-3 w-3" /> +{summary.previousMonthComparison}%
+                </span>
+              ) : (
+                <span className="text-green-500 flex items-center">
+                  <ArrowDownRight className="h-3 w-3" /> {summary.previousMonthComparison}%
+                </span>
+              )}
+              from last month
+            </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Active Accounts</CardTitle>
+            <CardTitle className="text-sm font-medium">Forecasted Month End</CardTitle>
+            <TrendingUp className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">${summary.forecastedCost.toLocaleString()}</div>
+            <p className="text-xs text-muted-foreground mt-1">
+              Based on current spending patterns
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Active AWS Accounts</CardTitle>
             <Cloud className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{summary.activeAccounts || 0}</div>
+            <div className="text-2xl font-bold">{summary.activeAccounts}</div>
+            <p className="text-xs text-muted-foreground mt-1">
+              Accounts currently being monitored
+            </p>
           </CardContent>
         </Card>
       </div>
 
+      {/* Analysis Tabs */}
       <Tabs defaultValue="overview" className="space-y-4">
         <TabsList>
           <TabsTrigger value="overview">Cost Overview</TabsTrigger>
-          <TabsTrigger value="breakdown">Service Breakdown</TabsTrigger>
+          <TabsTrigger value="services">Service Breakdown</TabsTrigger>
           <TabsTrigger value="billing">Monthly Reports</TabsTrigger>
         </TabsList>
-
+        
         <TabsContent value="overview" className="space-y-4">
           <CostChart />
         </TabsContent>
         
-        <TabsContent value="breakdown" className="space-y-4">
-           <ServiceBreakdown />
+        <TabsContent value="services">
+          <ServiceBreakdown />
         </TabsContent>
-
-        <TabsContent value="billing" className="space-y-6">
+        
+        <TabsContent value="billing">
           <MonthlyBilling />
         </TabsContent>
       </Tabs>

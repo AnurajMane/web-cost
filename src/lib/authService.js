@@ -1,50 +1,71 @@
-import { supabase } from './supabase';
-import { User } from '@supabase/supabase-js';
-import { AuthUser } from '@/types';
+import { api } from './api';
 
-class AuthService {
-  mapUser(user: User): AuthUser {
-    return {
-      id: user.id,
-      email: user.email!,
-      username: user.user_metadata?.username || user.user_metadata?.full_name || user.email!.split('@')[0],
-      avatar: user.user_metadata?.avatar_url || user.user_metadata?.picture,
-    };
+/**
+ * Service to handle authentication for the AWS Cost Intelligence platform.
+ * Translated from TypeScript to JavaScript to support the new backend architecture.
+ */
+export const authService = {
+  /**
+   * Logs in a user with email and password.
+   * Targets the Java/C# backend: POST /auth/login
+   */
+  async signInWithPassword(email, password) {
+    try {
+      const response = await api.post('/auth/login', { email, password });
+      if (response.token) {
+        localStorage.setItem('auth_token', response.token);
+      }
+      return response;
+    } catch (error) {
+      throw new Error(error.response?.data?.message || 'Login failed');
+    }
+  },
+
+  /**
+   * Sends a one-time password to the user's email.
+   * Targets the backend: POST /auth/send-otp
+   */
+  async sendOtp(email) {
+    try {
+      return await api.post('/auth/send-otp', { email });
+    } catch (error) {
+      throw new Error(error.response?.data?.message || 'Failed to send OTP');
+    }
+  },
+
+  /**
+   * Verifies OTP and completes the registration/password set process.
+   * Targets the backend: POST /auth/verify
+   */
+  async verifyOtpAndSetPassword(email, otp, password, username) {
+    try {
+      const response = await api.post('/auth/verify', {
+        email,
+        otp,
+        password,
+        username,
+      });
+      if (response.token) {
+        localStorage.setItem('auth_token', response.token);
+      }
+      return response;
+    } catch (error) {
+      throw new Error(error.response?.data?.message || 'Verification failed');
+    }
+  },
+
+  /**
+   * Clears local authentication state.
+   */
+  logout() {
+    localStorage.removeItem('auth_token');
+    // Optional: Add a backend call to invalidate the session if needed
+  },
+
+  /**
+   * Helper to check if the user is currently authenticated.
+   */
+  isAuthenticated() {
+    return !!localStorage.getItem('auth_token');
   }
-
-  async sendOtp(email: string) {
-    const { error } = await supabase.auth.signInWithOtp({
-      email,
-      options: { shouldCreateUser: true },
-    });
-    if (error) throw error;
-  }
-
-  async verifyOtpAndSetPassword(email: string, token: string, password: string, username: string) {
-    const { data, error } = await supabase.auth.verifyOtp({
-      email,
-      token,
-      type: 'email',
-    });
-    if (error) throw error;
-
-    const { error: updateError } = await supabase.auth.updateUser({
-      password,
-      data: { username },
-    });
-    if (updateError) throw updateError;
-
-    return data.user;
-  }
-
-  async signInWithPassword(email: string, password: string) {
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-    if (error) throw error;
-    return data.user;
-  }
-}
-
-export const authService = new AuthService();
+};

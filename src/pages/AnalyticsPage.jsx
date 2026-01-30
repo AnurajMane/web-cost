@@ -1,11 +1,11 @@
-import { useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 export function AnalyticsPage() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Redirect to dashboard since analytics is now integrated there
+    // Redirects to the root Dashboard as analytics are integrated there
     navigate('/');
   }, [navigate]);
 

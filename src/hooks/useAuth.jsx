@@ -1,59 +1,68 @@
-import { useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { supabase } from '@/lib/supabase';
-import { useAuthStore } from '@/stores/authStore';
-import { AuthUser } from '@/types';
-import { User } from '@supabase/supabase-js';
-
-function mapSupabaseUser(user: User): AuthUser {
-  return {
-    id: user.id,
-    email: user.email!,
-    username: user.user_metadata?.username || user.user_metadata?.full_name || user.email!.split('@')[0],
-    avatar: user.user_metadata?.avatar_url || user.user_metadata?.picture,
-  };
-}
+import { api } from '@/lib/api';
 
 export function useAuth() {
-  const { user, loading, login, logout, setLoading } = useAuthStore();
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
+  // Validate the current session on load
+  const checkAuth = useCallback(async () => {
+    try {
+      const token = localStorage.getItem('auth_token');
+      if (!token) {
+        setLoading(false);
+        return;
+      }
+
+      // Calls your new backend: GET /auth/me
+      const userData = await api.get('/auth/me');
+      setUser(userData);
+    } catch (error) {
+      console.error("Authentication check failed:", error);
+      localStorage.removeItem('auth_token');
+      setUser(null);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
-    let mounted = true;
+    checkAuth();
+  }, [checkAuth]);
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (mounted && session?.user) {
-        login(mapSupabaseUser(session.user));
-      }
-      if (mounted) setLoading(false);
-    });
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((event, session) => {
-      if (!mounted) return;
-
-      if (event === 'SIGNED_IN' && session?.user) {
-        login(mapSupabaseUser(session.user));
-        setLoading(false);
-      } else if (event === 'SIGNED_OUT') {
-        logout();
-        setLoading(false);
-        navigate('/login');
-      } else if (event === 'TOKEN_REFRESHED' && session?.user) {
-        login(mapSupabaseUser(session.user));
-      }
-    });
-
-    return () => {
-      mounted = false;
-      subscription.unsubscribe();
-    };
-  }, [login, logout, setLoading, navigate]);
-
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
+  const login = async (credentials) => {
+    setLoading(true);
+    try {
+      // POST /auth/login returns { user, token }
+      const { user: userData, token } = await api.post('/auth/login', credentials);
+      
+      localStorage.setItem('auth_token', token);
+      setUser(userData);
+      navigate('/');
+      return { success: true };
+    } catch (error) {
+      return { 
+        success: false, 
+        error: error.response?.data?.message || 'Login failed' 
+      };
+    } finally {
+      setLoading(false);
+    }
   };
 
-  return { user, loading, logout: handleLogout };
+  const logout = useCallback(() => {
+    localStorage.removeItem('auth_token');
+    setUser(null);
+    navigate('/login');
+  }, [navigate]);
+
+  return {
+    user,
+    loading,
+    login,
+    logout,
+    isAuthenticated: !!user,
+  };
 }

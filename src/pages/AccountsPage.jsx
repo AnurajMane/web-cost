@@ -1,129 +1,150 @@
-import { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { Plus, Settings2, Trash2, ExternalLink, ShieldCheck } from 'lucide-react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Plus, Trash2, RefreshCw } from 'lucide-react';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { api } from '@/lib/api';
-import { AddAccountDialog } from '@/components/accounts/AddAccountDialog';
-import { EditAccountDialog } from '@/components/accounts/EditAccountDialog';
+import { AddAccountDialog } from '@/components/dashboard/AddAccountDialog';
+import { EditAccountDialog } from '@/components/dashboard/EditAccountDialog';
 
-export function AccountsPage() {
+export default function AccountsPage() {
   const [accounts, setAccounts] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [addDialogOpen, setAddDialogOpen] = useState(false);
-  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [isAddOpen, setIsAddOpen] = useState(false);
+  const [isEditOpen, setIsEditOpen] = useState(false);
   const [selectedAccount, setSelectedAccount] = useState(null);
   const { toast } = useToast();
 
   useEffect(() => {
-    loadAccounts();
+    fetchAccounts();
   }, []);
 
-  const loadAccounts = async () => {
+  const fetchAccounts = async () => {
     try {
       setLoading(true);
+      // Fetches from Java Backend: GET /api/accounts
       const data = await api.get('/accounts');
-      setAccounts(data);
+      setAccounts(data || []);
     } catch (error) {
-      toast({ title: 'Error loading accounts', variant: 'destructive' });
+      toast({
+        title: "Error",
+        description: "Failed to load AWS accounts",
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
     }
   };
 
-  const handleSync = async (id) => {
+  const handleDelete = async (id) => {
+    if (!confirm('Are you sure you want to disconnect this account?')) return;
+    
     try {
-      toast({ title: 'Sync started...' });
-      await api.post(`/accounts/${id}/sync`);
-      toast({ title: 'Sync completed' });
+      // Calls Java Backend: DELETE /api/accounts/{id}
+      await api.delete(`/accounts/${id}`);
+      toast({ title: "Success", description: "Account disconnected successfully" });
+      fetchAccounts();
     } catch (error) {
-      toast({ title: 'Sync failed', variant: 'destructive' });
+      toast({
+        title: "Error",
+        description: "Failed to delete account",
+        variant: "destructive",
+      });
     }
   };
 
-  const handleDelete = async (id) => {
-    if (!confirm("Are you sure you want to delete this account?")) return;
-    try {
-      await api.delete(`/accounts/${id}`);
-      setAccounts(accounts.filter(a => a.id !== id));
-      toast({ title: 'Account deleted' });
-    } catch (error) {
-      toast({ title: 'Delete failed', variant: 'destructive' });
-    }
+  const handleEdit = (account) => {
+    setSelectedAccount(account);
+    setIsEditOpen(true);
   };
 
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight">AWS Accounts</h2>
-          <p className="text-muted-foreground">Manage your connected AWS accounts</p>
+          <h1 className="text-3xl font-bold tracking-tight">AWS Accounts</h1>
+          <p className="text-muted-foreground">
+            Manage your connected cloud environments and credentials.
+          </p>
         </div>
-        <Button onClick={() => setAddDialogOpen(true)}>
-          <Plus className="h-4 w-4 mr-2" />
+        <Button onClick={() => setIsAddOpen(true)}>
+          <Plus className="mr-2 h-4 w-4" />
           Connect Account
         </Button>
       </div>
 
-      {loading ? (
-        <div className="text-center py-10">Loading accounts...</div>
-      ) : accounts.length === 0 ? (
-        <Card className="border-dashed">
-          <CardContent className="flex flex-col items-center justify-center h-48">
-            <p className="text-muted-foreground mb-4">No accounts connected yet.</p>
-            <Button variant="outline" onClick={() => setAddDialogOpen(true)}>Connect your first account</Button>
-          </CardContent>
-        </Card>
-      ) : (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {accounts.map((account) => (
-            <Card key={account.id} className="relative group hover:shadow-md transition-shadow">
-              <CardHeader className="pb-2">
-                <CardTitle className="flex items-center justify-between text-base">
-                  <span className="truncate">{account.account_name}</span>
-                  <div className={`h-2 w-2 rounded-full ${account.is_active ? 'bg-green-500' : 'bg-gray-300'}`} />
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div className="text-sm text-muted-foreground">
-                    <p className="truncate">ID: {account.account_id}</p>
-                    <p>Region: {account.region}</p>
-                  </div>
-                  
-                  <div className="flex items-center gap-2">
-                    <Button variant="outline" size="sm" className="flex-1" onClick={() => handleSync(account.id)}>
-                      <RefreshCw className="h-4 w-4 mr-2" /> Sync
-                    </Button>
-                    <Button variant="outline" size="sm" onClick={() => {
-                        setSelectedAccount(account);
-                        setEditDialogOpen(true);
-                    }}>
-                        Edit
-                    </Button>
-                    <Button variant="destructive" size="icon" className="h-9 w-9" onClick={() => handleDelete(account.id)}>
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      )}
+      <Card>
+        <CardHeader>
+          <CardTitle>Connected Environments</CardTitle>
+          <CardDescription>
+            Your cost data is aggregated from these accounts using read-only access.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Account Name</TableHead>
+                <TableHead>Account ID</TableHead>
+                <TableHead>Region</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {loading ? (
+                <TableRow>
+                  <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                    Loading accounts...
+                  </TableCell>
+                </TableRow>
+              ) : accounts.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                    No accounts connected yet.
+                  </TableCell>
+                </TableRow>
+              ) : (
+                accounts.map((account) => (
+                  <TableRow key={account.id}>
+                    <TableCell className="font-medium">{account.account_name}</TableCell>
+                    <TableCell className="font-mono text-xs">{account.account_id}</TableCell>
+                    <TableCell>{account.region || 'us-east-1'}</TableCell>
+                    <TableCell>
+                      <Badge variant="secondary" className="bg-green-100 text-green-800 hover:bg-green-100">
+                        <ShieldCheck className="mr-1 h-3 w-3" />
+                        Active
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-right space-x-2">
+                      <Button variant="ghost" size="icon" onClick={() => handleEdit(account)}>
+                        <Settings2 className="h-4 w-4" />
+                      </Button>
+                      <Button variant="ghost" size="icon" className="text-destructive" onClick={() => handleDelete(account.id)}>
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
 
-      {/* Dialogs */}
       <AddAccountDialog 
-        open={addDialogOpen} 
-        onOpenChange={setAddDialogOpen} 
-        onSuccess={loadAccounts} 
+        open={isAddOpen} 
+        onOpenChange={setIsAddOpen} 
+        onSuccess={fetchAccounts} 
       />
       
-      <EditAccountDialog
+      <EditAccountDialog 
         account={selectedAccount}
-        open={editDialogOpen}
-        onOpenChange={setEditDialogOpen}
-        onSuccess={loadAccounts}
+        open={isEditOpen} 
+        onOpenChange={setIsEditOpen} 
+        onSuccess={fetchAccounts} 
       />
     </div>
   );
