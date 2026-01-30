@@ -6,8 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { authService } from '@/lib/authService';
-import { useAuthStore } from '@/stores/authStore';
-import { CloudCog } from 'lucide-react';
+import { useAuth } from '@/hooks/useAuth';
 
 export function LoginPage() {
   const [email, setEmail] = useState('');
@@ -15,37 +14,40 @@ export function LoginPage() {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { login } = useAuthStore();
+  const { login } = useAuth(); // Use the hook, not the store directly
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
     setLoading(true);
 
     try {
+      // The authService can now calls Java/C# backend
       const user = await authService.signInWithPassword(email, password);
-      login(authService.mapUser(user!));
+      login(user); // Update global state
       navigate('/');
-    } catch (error: any) {
+    } catch (error) {
       toast({
         title: 'Login failed',
-        description: error.message,
+        description: error.message || 'Invalid credentials',
         variant: 'destructive',
       });
+    } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-secondary to-background p-4">
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
       <Card className="w-full max-w-md">
-        <CardHeader className="text-center">
+        <CardHeader className="space-y-1">
           <div className="flex justify-center mb-4">
-            <div className="bg-gradient-primary p-3 rounded-lg">
-              <CloudCog className="h-8 w-8 text-primary-foreground" />
+            <div className="bg-primary/10 p-3 rounded-full">
+              {/* Simple logo placeholder */}
+              <div className="h-6 w-6 bg-primary rounded-sm" />
             </div>
           </div>
-          <CardTitle className="text-2xl">Welcome Back</CardTitle>
-          <CardDescription>Sign in to AWS Cost Optimizer</CardDescription>
+          <CardTitle className="text-2xl text-center">Welcome Back</CardTitle>
+          <CardDescription className="text-center">Sign in to AWS Cost Optimizer</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleLogin} className="space-y-4">
