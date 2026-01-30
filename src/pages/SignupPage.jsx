@@ -20,6 +20,7 @@ export function SignupPage() {
   const { toast } = useToast();
   const { login } = useAuth();
 
+  
   const handleSendOtp = async (e) => {
     e.preventDefault();
     setLoading(true);

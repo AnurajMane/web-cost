@@ -59,6 +59,7 @@ export function AlertsPage() {
                 </CardContent>
              </Card>
           ))}
+          
         </div>
       )}
     </div>

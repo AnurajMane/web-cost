@@ -144,7 +144,8 @@ export function AssistantPage() {
               onKeyDown={(e) => e.key === 'Enter' && handleSend()}
               placeholder="Ask about AWS cost optimization..."
               disabled={loading}
-              className="flex-1"
+              className="flex-1" 
+              
             />
             <Button onClick={handleSend} disabled={loading || !input.trim()}>
               {loading ? <RefreshCw className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}

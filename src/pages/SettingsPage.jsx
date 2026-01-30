@@ -15,6 +15,7 @@ export function SettingsPage() {
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
 
+  
   useEffect(() => {
     // Load settings from backend
     api.get('/settings').then(setConfig).catch(() => {});
