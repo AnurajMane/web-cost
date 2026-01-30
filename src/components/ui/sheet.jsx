@@ -1,5 +1,5 @@
 import * as React from "react"
-import * as SheetPrimitive from "@radix-ui/react-dialog"
+import * as SheetPrimitive from "@radix-ui/react-sheet"
 import { cva } from "class-variance-authority"
 import { X } from "lucide-react"
 
@@ -62,10 +62,7 @@ const SheetContent = React.forwardRef(({ side = "right", className, children, ..
 ))
 SheetContent.displayName = SheetPrimitive.Content.displayName
 
-const SheetHeader = ({
-  className,
-  ...props
-}) => (
+const SheetHeader = ({ className, ...props }) => (
   <div
     className={cn(
       "flex flex-col space-y-2 text-center sm:text-left",
@@ -76,10 +73,7 @@ const SheetHeader = ({
 )
 SheetHeader.displayName = "SheetHeader"
 
-const SheetFooter = ({
-  className,
-  ...props
-}) => (
+const SheetFooter = ({ className, ...props }) => (
   <div
     className={cn(
       "flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2",
