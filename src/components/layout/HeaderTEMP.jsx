@@ -11,6 +11,15 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { LogOut, User } from 'lucide-react';
 
+const getInitials = (name) => {
+  if (!name) return 'U';
+  const nameParts = name.trim().split(' ');
+  if (nameParts.length > 1) {
+    return (nameParts[0][0] + nameParts[nameParts.length - 1][0]).toUpperCase();
+  }
+  return name[0].toUpperCase();
+};
+
 function Header() {
   const { user, logout } = useAuth();
 
@@ -23,10 +32,10 @@ function Header() {
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="relative h-10 w-10 rounded-full">
-              <Avatar>
-                <AvatarImage src={user?.avatar} />
-                <AvatarFallback className="bg-primary/10 text-primary">
-                  {user?.username?.[0]?.toUpperCase() || 'U'}
+              <Avatar className="h-9 w-9">
+                <AvatarImage src={user?.avatar} alt={user?.username} />
+                <AvatarFallback>
+                  {getInitials(user?.username)}
                 </AvatarFallback>
               </Avatar>
             </Button>

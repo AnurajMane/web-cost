@@ -60,6 +60,35 @@ export function useAuth() {
     }
   };
 
+  const signup = async (signupData) => {
+    setLoading(true);
+    try {
+      // Calls your Java backend: POST /auth/verify
+      const response = await authService.verifyOtpAndSetPassword(
+        signupData.email, 
+        signupData.otp, 
+        signupData.password, 
+        signupData.username
+      );
+      
+      const { user: userData, token } = response;
+      
+      // Immediately establish the session
+      localStorage.setItem('auth_token', token);
+      setUser(userData);
+      
+      navigate('/');
+      return { success: true };
+    } catch (error) {
+      return { 
+        success: false, 
+        error: error.message || 'Signup failed' 
+      };
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const logout = useCallback(() => {
     localStorage.removeItem('auth_token');
     setUser(null);

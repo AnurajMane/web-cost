@@ -5,12 +5,14 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { authService } from '@/lib/auth'; // Ensure this points to your new microservice API layer
+import { useAuth } from '@/hooks/useAuth';
+import { authService } from '@/lib/authService'; // FIX 1: Added missing import
 import { CloudLightning, Loader2 } from 'lucide-react';
 
 export default function SignupPage() {
+  const { signup, loading: authLoading } = useAuth();
   const [step, setStep] = useState(1);
-  const [loading, setLoading] = useState(false);
+  const [localLoading, setLocalLoading] = useState(false); // Local loading for Step 1
   const [email, setEmail] = useState('');
   const [formData, setFormData] = useState({
     username: '',
@@ -20,14 +22,13 @@ export default function SignupPage() {
   });
 
   const { toast } = useToast();
-  const navigate = useNavigate();
 
-  // Step 1: Request OTP from the new Java/Auth microservice
+  // Step 1: Request OTP
   const handleSendOtp = async (e) => {
     e.preventDefault();
-    setLoading(true);
+    setLocalLoading(true);
     try {
-      await authService.sendOtp(email); // Calls /api/auth/send-otp
+      await authService.sendOtp(email); 
       toast({
         title: "OTP Sent",
         description: "Please check your email for the verification code.",
@@ -36,47 +37,45 @@ export default function SignupPage() {
     } catch (error) {
       toast({
         title: "Error",
-        description: error.message || "Failed to send OTP. Please try again.",
+        description: error.message || "Failed to send OTP.",
         variant: "destructive",
       });
     } finally {
-      setLoading(false);
+      setLocalLoading(false);
     }
   };
 
-  // Step 2: Verify OTP and finalize account setup
-  const handleFinalizeSignup = async (e) => {
+  // Step 2: Finalize Signup using the hook
+  const handleVerify = async (e) => {
     e.preventDefault();
+    
     if (formData.password !== formData.confirmPassword) {
       return toast({
-        title: "Passwords Mismatch",
-        description: "Please ensure both passwords match.",
         variant: "destructive",
+        title: "Passwords do not match",
       });
     }
 
-    setLoading(true);
-    try {
-      await authService.verifyOtpAndSetPassword({
-        email,
-        username: formData.username,
-        otp: formData.otp,
-        password: formData.password
-      }); // Hits the new /api/auth/verify endpoint
-      
+    // FIX 2: Uses the global signup function from our hook
+    const result = await signup({
+      email,
+      otp: formData.otp,
+      username: formData.username,
+      password: formData.password
+    });
+
+    if (result.success) {
       toast({
-        title: "Account Created",
-        description: "Your AWS Cost Optimizer account is ready.",
+        title: "Account Created!",
+        description: "Welcome to OnSpace.AI. Your dashboard is ready.",
       });
-      navigate('/login');
-    } catch (error) {
+      // Note: navigate('/') is handled inside the useAuth hook!
+    } else {
       toast({
-        title: "Signup Failed",
-        description: error.message || "Invalid OTP or registration error.",
         variant: "destructive",
+        title: "Signup Failed",
+        description: result.error,
       });
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -107,13 +106,14 @@ export default function SignupPage() {
                   required
                 />
               </div>
-              <Button type="submit" className="w-full" disabled={loading}>
-                {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              <Button type="submit" className="w-full" disabled={localLoading}>
+                {localLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Send Verification Code
               </Button>
             </form>
           ) : (
-            <form onSubmit={handleFinalizeSignup} className="space-y-4">
+            /* FIX 3: Pointed form to handleVerify */
+            <form onSubmit={handleVerify} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="username">Username</Label>
                 <Input
@@ -153,8 +153,8 @@ export default function SignupPage() {
                   required
                 />
               </div>
-              <Button type="submit" className="w-full" disabled={loading}>
-                {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              <Button type="submit" className="w-full" disabled={authLoading}>
+                {authLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Create Account
               </Button>
             </form>
