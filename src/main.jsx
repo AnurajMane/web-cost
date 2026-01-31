@@ -11,9 +11,6 @@ if (container) {
   
   root.render(
     <React.StrictMode>
-      {/* If you are using a Global Auth Provider for your 
-        new Java/C# backend, you would wrap <App /> here.
-      */}
       <App />
     </React.StrictMode>
   );
