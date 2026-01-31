@@ -12,9 +12,10 @@ export const authService = {
   async signInWithPassword(email, password) {
     try {
       const response = await api.post('/auth/login', { email, password });
-      if (response.token) {
-        localStorage.setItem('auth_token', response.token);
-      }
+      //commented the localStorage.setItem line here. The service should only be responsible for talking to the server and returning the data.
+      // if (response.token) {
+      //   localStorage.setItem('auth_token', response.token);
+      // }
       return response;
     } catch (error) {
       throw new Error(error.response?.data?.message || 'Login failed');

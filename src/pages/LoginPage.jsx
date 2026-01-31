@@ -5,41 +5,44 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { api } from '@/lib/api'; // Your centralized API utility for Java/C# backends
+import { useAuth } from '@/hooks/useAuth';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [loading, setLoading] = useState(false);
+  //const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const { login, loading } = useAuth();
   const { toast } = useToast();
 
   const handleLogin = async (e) => {
     e.preventDefault();
-    setLoading(true);
+    //setLoading(true); // Handled by useAuth now
 
     try {
-      // This will call your new Java/Spring Boot Auth service
-      const response = await api.post('/auth/login', { email, password });
-      
-      if (response.token) {
-        localStorage.setItem('token', response.token);
-        toast({
-          title: "Login Successful",
-          description: "Welcome back to your AWS Cost Intelligence dashboard.",
-        });
-        navigate('/');
-      }
-    } catch (error) {
+    const result = await login({ email, password });
+    
+    if (result.success) {
+      toast({
+        title: "Login Successful",
+        description: "Welcome back to your AWS Cost Intelligence dashboard.",
+      });
+      // Navigation is already handled inside the useAuth.login function!
+    } else {
       toast({
         variant: "destructive",
         title: "Login Failed",
-        description: error.message || "Invalid credentials. Please try again.",
+        description: result.error,
       });
-    } finally {
-      setLoading(false);
     }
-  };
+  } catch (error) {
+    toast({
+      variant: "destructive",
+      title: "Error",
+      description: "An unexpected error occurred.",
+    });
+  }
+};
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-secondary/10 px-4">
