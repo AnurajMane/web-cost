@@ -47,6 +47,7 @@ const SidebarProvider = React.forwardRef(
     },
     ref
   ) => {
+    
     const isMobile = useIsMobile()
     const [openMobile, setOpenMobile] = React.useState(false)
 

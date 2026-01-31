@@ -15,6 +15,7 @@ const InputOTP = React.forwardRef(({ className, containerClassName, ...props }, 
     {...props}
   />
 ))
+
 InputOTP.displayName = "InputOTP"
 
 const InputOTPGroup = React.forwardRef(({ className, ...props }, ref) => (
