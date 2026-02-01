@@ -22,7 +22,7 @@ const getInitials = (name) => {
   return name[0].toUpperCase();
 };
 
-function Header() {
+function HeaderTEMP() {
   const { user, logout } = useAuth();
 
   // Health Check Logic
@@ -91,4 +91,4 @@ function Header() {
     </header>
   );
 }
-export default Header;
+export default HeaderTEMP;

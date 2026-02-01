@@ -7,7 +7,7 @@ import { Save } from 'lucide-react';
 import { api } from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
 
-export function SettingsPage() {
+function SettingsPage() {
   const [config, setConfig] = useState({
     retentionDays: 365,
     currency: 'USD',
@@ -105,3 +105,5 @@ export function SettingsPage() {
     </div>
   );
 }
+
+export default SettingsPage;

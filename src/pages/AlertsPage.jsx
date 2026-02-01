@@ -4,7 +4,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/com
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { api } from '@/lib/api';
 
-export function AlertsPage() {
+function AlertsPage() {
   const [alerts, setAlerts] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -86,3 +86,5 @@ export function AlertsPage() {
     </div>
   );
 }
+
+export default AlertsPage;

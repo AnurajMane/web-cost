@@ -13,7 +13,7 @@ import { CostChart } from '@/components/dashboard/CostChart';
 import { ServiceBreakdown } from '@/components/dashboard/ServiceBreakdown';
 import { MonthlyBilling } from '@/components/dashboard/MonthlyBilling';
 // Note: Ensure your api.js exports both authApi and analyticsApi
-import { authApi, analyticsApi } from '@/lib/api'; 
+import { api } from '@/lib/api'; 
 import FreeTierUsage from '@/components/dashboard/FreeTierUsage';
 
 export default function DashboardPage() {
@@ -35,8 +35,8 @@ export default function DashboardPage() {
       
       // Fetch data from both Java (Auth/Profiles) and C# (Analytics)
       const [costSummary, accounts] = await Promise.all([
-        analyticsApi.get('/cost/monthly-summary'), // Calls C# service
-        authApi.get('/profiles')                   // Calls Java service
+        api.get('/cost/monthly-summary'), // Calls C# service
+        api.get('/profiles')                   // Calls Java service
       ]);
 
       setSummary({

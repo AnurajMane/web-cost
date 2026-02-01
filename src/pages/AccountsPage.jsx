@@ -6,8 +6,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { api } from '@/lib/api';
-import { AddAccountDialog } from '@/components/dashboard/AddAccountDialog';
-import { EditAccountDialog } from '@/components/dashboard/EditAccountDialog';
+import { AddAccountDialog } from '@/components/accounts/AddAccountDialog';
+import { EditAccountDialog } from '@/components/accounts/EditAccountDialog';
 
 export default function AccountsPage() {
   const [accounts, setAccounts] = useState([]);

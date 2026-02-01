@@ -10,7 +10,7 @@ const navigation = [
   { name: 'Settings', href: '/settings', icon: Settings },
 ];
 
-export default function Sidebar() {
+function SidebarTEMP() {
   return (
     <div className="hidden md:flex md:flex-shrink-0">
       <div className="flex flex-col w-64 bg-card border-r border-border h-screen">
@@ -45,3 +45,5 @@ export default function Sidebar() {
     </div>
   );
 }
+
+export default SidebarTEMP;

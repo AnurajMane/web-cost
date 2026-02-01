@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { analyticsApi } from '@/api';
+import { api } from '@/lib/api';
 import { Progress } from "@/components/ui/progress";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
