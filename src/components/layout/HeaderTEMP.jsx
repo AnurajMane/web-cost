@@ -9,7 +9,9 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { LogOut, User } from 'lucide-react';
+import { LogOut, User, Activity } from 'lucide-react'; // Added Activity icon
+import { api } from '@/lib/api'; // Ensure this path is correct
+import { toast } from "sonner"; // Using Sonner for status feedback
 
 const getInitials = (name) => {
   if (!name) return 'U';
@@ -23,12 +25,39 @@ const getInitials = (name) => {
 function Header() {
   const { user, logout } = useAuth();
 
+  // Health Check Logic
+  const checkHealth = async () => {
+    toast.promise(
+      Promise.all([
+        api.get('/auth/health'),     // Routes to Java
+        api.get('/cost/health')      // Routes to C#
+      ]),
+      {
+        loading: 'Checking system status...',
+        success: () => 'All systems operational: Java & C# connected!',
+        error: (err) => `Connection failed: ${err.message}`,
+      }
+    );
+  };
+
   return (
     <header className="h-16 border-b border-border bg-card flex items-center justify-between px-6">
       <div className="flex items-center gap-4">
         <h1 className="text-xl font-semibold text-foreground">Cloud Cost Management</h1>
       </div>
+      
       <div className="flex items-center gap-4">
+        {/* Health Check Button */}
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={checkHealth}
+          className="hidden md:flex items-center gap-2"
+        >
+          <Activity className="h-4 w-4" />
+          System Status
+        </Button>
+
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="relative h-10 w-10 rounded-full">

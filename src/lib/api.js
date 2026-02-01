@@ -1,11 +1,9 @@
 import axios from 'axios';
 
-// Get the base URLs from your .env file
-const authBase = import.meta.env.VITE_AUTH_API_URL;
-const analyticsBase = import.meta.env.VITE_ANALYTICS_API_URL;
+const authBase = import.meta.env.VITE_AUTH_API_URL;      // http://localhost:8080
+const analyticsBase = import.meta.env.VITE_ANALYTICS_API_URL; // https://localhost:7188
 
 export const api = axios.create({
-  // Leave baseURL empty here because we will handle it in the interceptor
   headers: {
     'Content-Type': 'application/json',
   },
@@ -13,30 +11,40 @@ export const api = axios.create({
 
 api.interceptors.request.use(
   (config) => {
-    // Logic to route the request to the correct service
-    if (config.url.startsWith('/costs')) {
-      config.baseURL = analyticsBase; // Send to C# Service
+    // 1. Determine the Correct BaseURL
+    // We check if the URL starts with our C# specific paths
+    const isAnalyticsRequest = config.url.startsWith('/cost') || 
+                               config.url.startsWith('/free-tier') ||
+                               config.url.startsWith('/api/cost');
+
+    if (isAnalyticsRequest) {
+      config.baseURL = analyticsBase;
     } else {
-      config.baseURL = authBase;      // Send to Java Service (Auth/Accounts)
+      config.baseURL = authBase;
     }
 
+    // 2. Attach Authorization Token
+    // Use the key 'auth_token' to match your localStorage logic
     const token = localStorage.getItem('auth_token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+
     return config;
   },
   (error) => Promise.reject(error)
 );
 
-// RESPONSE INTERCEPTOR: Handle expired tokens (401 errors)
 api.interceptors.response.use(
-  (response) => response.data, // This simplifies your calls (no need for .data everywhere)
+  (response) => response.data,
   (error) => {
+    // 3. Global 401 handling
     if (error.response?.status === 401) {
-      // If the token is invalid or expired, log the user out
       localStorage.removeItem('auth_token');
-      window.location.href = '/login'; 
+      // Only redirect if we aren't already on the login page
+      if (window.location.pathname !== '/login') {
+        window.location.href = '/login'; 
+      }
     }
     return Promise.reject(error);
   }

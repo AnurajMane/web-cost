@@ -12,7 +12,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { CostChart } from '@/components/dashboard/CostChart';
 import { ServiceBreakdown } from '@/components/dashboard/ServiceBreakdown';
 import { MonthlyBilling } from '@/components/dashboard/MonthlyBilling';
-import { api } from '@/lib/api';
+// Note: Ensure your api.js exports both authApi and analyticsApi
+import { authApi, analyticsApi } from '@/lib/api'; 
+import FreeTierUsage from '@/components/dashboard/FreeTierUsage';
 
 export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
@@ -30,17 +32,18 @@ export default function DashboardPage() {
   const loadDashboardData = async () => {
     try {
       setLoading(true);
-      // Fetches from your new backend architecture
+      
+      // Fetch data from both Java (Auth/Profiles) and C# (Analytics)
       const [costSummary, accounts] = await Promise.all([
-        api.get('/costs/summary'),
-        api.get('/accounts')
+        analyticsApi.get('/cost/monthly-summary'), // Calls C# service
+        authApi.get('/profiles')                   // Calls Java service
       ]);
 
       setSummary({
-        totalCost: costSummary?.total_mtd || 0,
-        forecastedCost: costSummary?.forecasted || 0,
-        previousMonthComparison: costSummary?.change_percent || 0,
-        activeAccounts: accounts?.length || 0
+        totalCost: costSummary.data?.total_mtd || 0,
+        forecastedCost: costSummary.data?.forecasted || 0,
+        previousMonthComparison: costSummary.data?.change_percent || 0,
+        activeAccounts: accounts.data?.length || 0
       });
     } catch (error) {
       console.error("Error loading dashboard metrics:", error);
@@ -50,9 +53,9 @@ export default function DashboardPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 p-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-3xl font-bold tracking-tight">Dashboard Overview</h2>
+        <h2 className="text-3xl font-bold tracking-tight">Cloud Cost Management</h2>
       </div>
 
       {/* KPI Metric Cards */}
@@ -94,16 +97,22 @@ export default function DashboardPage() {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Active AWS Accounts</CardTitle>
+            <CardTitle className="text-sm font-medium">Monitoring Status</CardTitle>
             <Cloud className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{summary.activeAccounts}</div>
+            <div className="text-2xl font-bold">Active</div>
             <p className="text-xs text-muted-foreground mt-1">
-              Accounts currently being monitored
+              Connected to AWS via C# Analytics Service
             </p>
           </CardContent>
         </Card>
+      </div>
+
+      {/* NEW: AWS Free Tier Usage Section */}
+      <div className="space-y-4">
+        <h3 className="text-xl font-semibold">AWS Free Tier Monitoring</h3>
+        <FreeTierUsage /> 
       </div>
 
       {/* Analysis Tabs */}
