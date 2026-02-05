@@ -3,6 +3,10 @@ import * as React from "react"
 const TOAST_LIMIT = 1
 const TOAST_REMOVE_DELAY = 10000
 
+// This is a custom hook for managing toast notifications in a React application.
+// It provides a way to add, update, dismiss, and remove toast messages.
+// The hook maintains an internal state of active toasts and exposes a `toast` function to create new toasts.
+// Each toast has an auto-dismiss feature that removes it after a specified delay.
 const actionTypes = {
   ADD_TOAST: "ADD_TOAST",
   UPDATE_TOAST: "UPDATE_TOAST",

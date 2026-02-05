@@ -4,7 +4,7 @@ import { api } from '@/lib/api';
 import { authService } from '@/lib/authService';
 
 export function useAuth() {
-  const [user, setUser] = useState(null);
+  const { user, login: setStoreUser } = useAuthStore();
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
@@ -17,7 +17,7 @@ export function useAuth() {
         return;
       }
 
-      // Calls your new backend: GET /auth/me
+      // Calls new backend: GET /auth/me
       const userData = await api.get('/auth/me');
       setUser(userData);
     } catch (error) {
@@ -44,9 +44,9 @@ export function useAuth() {
       
       const { user: userData, token } = response;
       
-      // Handle the updates here in one place
+      // Handle the updates at one place
       localStorage.setItem('auth_token', token);
-      setUser(userData); // This triggers the UI update immediately
+      setUser(userData); //triggers the UI update immediately
       
       navigate('/');
       return { success: true };
@@ -63,7 +63,7 @@ export function useAuth() {
   const signup = async (signupData) => {
     setLoading(true);
     try {
-      // Calls your Java backend: POST /auth/verify
+      // Calls Java backend: POST /auth/verify
       const response = await authService.verifyOtpAndSetPassword(
         signupData.email, 
         signupData.otp, 

@@ -18,7 +18,7 @@ export function EditAccountDialog({ account, open, onOpenChange, onSuccess }) {
   });
   const { toast } = useToast();
 
-  // Populate form when the account prop changes
+  //Populate form when the account prop changes
   useEffect(() => {
     if (account) {
       setFormData({
@@ -26,7 +26,7 @@ export function EditAccountDialog({ account, open, onOpenChange, onSuccess }) {
         awsEmail: account.aws_email || '',
         accountId: account.account_id || '',
         region: account.region || 'us-east-1',
-        // We don't populate secrets for security, only allow overwriting
+        //don't populate secrets for security, only allow overwriting
         accessKeyId: '',
         secretKey: '',
       });

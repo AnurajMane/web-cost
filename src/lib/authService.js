@@ -12,7 +12,8 @@ export const authService = {
   async signInWithPassword(email, password) {
     try {
       const response = await api.post('/auth/login', { email, password });
-      //commented the localStorage.setItem line here. The service should only be responsible for talking to the server and returning the data.
+      //commented the localStorage.setItem line here. 
+      //The service should only be responsible for talking to the server and returning the data.
       if (response.token) {
         localStorage.setItem('auth_token', response.token);
       }

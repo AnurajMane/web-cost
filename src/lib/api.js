@@ -1,51 +1,35 @@
 import axios from 'axios';
 
-const authBase = import.meta.env.VITE_AUTH_API_URL;      // http://localhost:8080
-const analyticsBase = import.meta.env.VITE_ANALYTICS_API_URL; // https://localhost:7188
+// 1. Define the base URLs for two backends
+const JAVA_BASE_URL = "http://localhost:8080"; // Java: Auth & Gemini AI
+const CSHARP_BASE_URL = "http://localhost:5022"; // C#: AWS Cost Data
 
-export const api = axios.create({
-  headers: {
-    'Content-Type': 'application/json',
-  },
-});
+// 2. Creating Axios instance for each backend
+export const javaApi = axios.create({ baseURL: JAVA_BASE_URL });
+export const csharpApi = axios.create({ baseURL: CSHARP_BASE_URL });
 
-api.interceptors.request.use(
-  (config) => {
-    // 1. Determine the Correct BaseURL
-    // We check if the URL starts with our C# specific paths
-    const isAnalyticsRequest = config.url.startsWith('/cost') || 
-                               config.url.startsWith('/free-tier') ||
-                               config.url.startsWith('/api/cost');
-
-    if (isAnalyticsRequest) {
-      config.baseURL = analyticsBase;
-    } else {
-      config.baseURL = authBase;
-    }
-
-    // 2. Attach Authorization Token
-    // Use the key 'auth_token' to match your localStorage logic
-    const token = localStorage.getItem('auth_token');
+// 3. Interceptor to add JWT token to every outgoing request
+const addAuthToken = (config) => {
+    const token = localStorage.getItem('token'); // Assuming to store it as 'token'
     if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
+        config.headers.Authorization = `Bearer ${token}`; // Sets "Bearer <token>"
     }
-
     return config;
-  },
-  (error) => Promise.reject(error)
-);
+};
 
-api.interceptors.response.use(
-  (response) => response.data,
-  (error) => {
-    // 3. Global 401 handling
-    if (error.response?.status === 401) {
-      localStorage.removeItem('auth_token');
-      // Only redirect if we aren't already on the login page
-      if (window.location.pathname !== '/login') {
-        window.location.href = '/login'; 
-      }
-    }
-    return Promise.reject(error);
-  }
-);
+// Applying the interceptor to both instances
+javaApi.interceptors.request.use(addAuthToken);
+csharpApi.interceptors.request.use(addAuthToken);
+
+// --- API FUNCTIONS ---
+
+// A. Auth & AI (Java Backend)
+export const login = (credentials) => javaApi.post('/auth/login', credentials);
+export const signup = (userData) => javaApi.post('/auth/signup', userData);
+export const getGeminiResponse = (message) => javaApi.post('/assistant/chat', { message });
+
+// B. AWS Data (C# Backend)
+export const getMonthlyCosts = () => csharpApi.get('/api/Cost/monthly-summary');
+export const getFreeTierUsage = () => csharpApi.get('/api/Cost/free-tier-status');
+
+export default { javaApi, csharpApi };
