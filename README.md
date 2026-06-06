@@ -91,7 +91,7 @@ The built-in assistant is configured as a **Cloud Cost Expert**. It provides:
 
 ---
 
-## 👨‍💻 Project Highlights (CDAC Submission)
+## 👨‍💻 Project Highlights
 * **Interoperability:** Demonstrated seamless communication between a Spring Boot (Java) and ASP.NET Core (C#) backend.
 * **Real-time Integration:** Direct integration with AWS SDK for live data fetching.
 * **Modern AI:** Implementation of Google's latest Gemini 1.5 Flash model for intelligent user interaction.
